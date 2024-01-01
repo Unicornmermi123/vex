@@ -4,8 +4,7 @@
  * A callback function for LLEMU's center button.
  *
  * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing. testing github
- 
+ * "I was pressed!" and nothing.
  */
 void on_center_button() {
 	static bool pressed = false;
@@ -25,17 +24,9 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "315M was here");
+	pros::lcd::set_text(1, "Hello PROS User!");
 
-driveLeftBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-driveLeftFront.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-driveRightBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-driveRightFront.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-climbA.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-climbB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-intakeA.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-intakeB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-catapult.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	pros::lcd::register_btn1_cb(on_center_button);
 }
 
 /**
@@ -67,17 +58,28 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+void autonomous() 
+{
 
-void redLeftCorner() {
+	Drivetrain.setDriveVelocity(50, percent);
+	Drivetrain.setTurnVelocity(50, percent);
+	Catapult.setVelocity(80, percent);
 
-}
-	
-void autonomous() {
-	//redLeftCorner();
-	//redRightCorner();
-	//blueLeftCorner();
-	//blueRighttCorner();
+	// Skills Auton Code
+	Drivetrain.driveFor(reverse, 60, inches);
+	// Come to Cata Position
+	Drivetrain.driveFor(forward, 25, inches);
+	Drivetrain.turn(right);
+	waitUntil((Inertial19.rotation(degrees) >= 90));
+	Drivetrain.driveFor(forward, 15, inches);
+	Catapult.spinFor(forward, 5, turns);
+	Drivetrain.driveFor(reverse, 10, inches);
+	// Working until here, DO NOT TOUCH
+	Drivetrain.turn(left);
+	// Waits until the motor reached a 90 degree turn and stops the drivetrain
+	waitUntil((Inertial19.rotation(degrees) >= 90));
 
+	Drivetrain.driveFor(reverse, 15, inches);
 }
 
 /**
@@ -94,28 +96,20 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::Motor left_mtr(1);
 	pros::Motor right_mtr(2);
 
 	while (true) {
-		//some code to control the drive
-		setDriveMotors();
-		//control intake
-		setIntakeMotors();
-		//controll catapult
-		setCatapultMotor();
-		//control climb
-		setClimbMotors();
-		pros::delay(10);
+		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
+		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
+		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
+		int left = master.get_analog(ANALOG_LEFT_Y);
+		int right = master.get_analog(ANALOG_RIGHT_Y);
+
+		left_mtr = left;
+		right_mtr = right;
 
 		pros::delay(20);
-
-
-
-
-
-		
 	}
 }
